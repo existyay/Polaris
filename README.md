@@ -1,98 +1,81 @@
 # 北极星 (Polaris)
 
-实时扫描 [GitHub `dsh-plugin` 主题](https://github.com/topics/dsh-plugin)，按
-[DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 的**极简开发思维**
-筛选最适合的插件，并以最低成本一键安装到 DSH profile。
+将 DeepSeek Harness (`dsh`) 插件能力收敛为一组**原子能力原语**：仅保留无状态、单一职责、可组合、可验证且成本有界的最小功能单元。所有涉及状态维护、历史学习、动态调度、多轮对抗或跨模态意图理解的能力均排除在插件边界之外，交由核心调度或外部工作流处理。
 
 - **中文名**：北极星
 - **英文名**：Polaris
 - **发布仓库**：https://github.com/existyay/Polaris
 - **特化方向**：理工科（数学/物理/化学/工程/科研/数值/仿真）与代码优化（性能/重构/静态分析/测试质量/基准/调试）
 
-## 判定标准
+## 原子原语清单
 
-一个仓库会被北极星选中，当且仅当：
+| 原语 | 命令 | 职责 | 边界 |
+|---|---|---|---|
+| 发现安装 | `/polaris-discover` | GitHub `topic:dsh-plugin` 实时发现、极简评分、一键安装 | 最多 2+2 页搜索，最多检查 96 个 package.json |
+| 静态审计 | `/polaris-audit` | 静态代码扫描 + 依赖漏洞审计 | 最多 400 文件、单文件 200KB、审计超时 90s |
+| 有界执行 | `/polaris-exec` | 子进程有界执行与运行时行为监控 | 硬超时、输出上限、精简环境 |
+| 验证门槛 | `/polaris-verify` | 基于 schema 的确定性功能测试与覆盖率门槛 | `.polaris-verify.json`，超时/输出上限 |
+| 混合检索 | `/polaris-retrieve` | 代码符号与文档混合检索 | 确定性正则，无模型，最多 400 文件 |
+| 许可证 | `/polaris-license` | 项目与直接依赖许可证合规查询 | 本地静态判定 |
+| 规则注入 | `/polaris-rules` | 声明式配置注入中文理工科术语映射与代码优化规则 | YAML 配置，无状态渲染 |
 
-1. GitHub 话题包含 `dsh-plugin`；
-2. 根目录 `package.json` 声明 `dsh.bundle.patch`（当前 DSH bundle 开发标准，`.dsh-plugin` 旧格式不纳入）；
-3. 仓库描述/话题命中理工科、代码优化或极简信号；
-4. 成本最低优先：仓库体积小、依赖少、无 `prepare` 构建门槛的优先。
+每个原语在 `cordis.patch.yml` 中是一个独立行（id 分别为 `polaris-*`），用户可在 profile 的 `cordis.patch.yml` 中按 id 禁用/覆盖任一原语，其余原语不受影响：
 
-## 安装本插件
+```yaml
+- id: polaris-exec
+  disabled: true
+```
+
+## 安装
 
 ```sh
-# 以 dsh bundle 形式安装北极星到 web profile
 dsh plugin --profile web add github:existyay/Polaris
-
-# 重启 profile
 dsh web
 ```
 
 北极星自身是**零依赖、无构建**的纯 ESM 包，git 安装无需 `allowBuilds` 授权。
 
-## 使用
-
-安装后，在 DSH Web UI 中直接使用 `/polaris` 命令：
-
-```
-/polaris search --scope code --top 10
-/polaris install --profile web --scope all --max 10
-/polaris install --profile web --scope code --dry-run
-/polaris review /path/to/project --write
-```
-
-也可以使用独立 CLI：
+## CLI
 
 ```sh
-npx github:existyay/Polaris search --scope code
-npx github:existyay/Polaris install --profile web --scope code --max 10
+dsh-polaris discover --scope code --top 10
+dsh-polaris install --profile web --scope code --max 10 --dry-run
+dsh-polaris audit --root /path/to/project
+dsh-polaris exec "python -c 'print(1)'" --timeout 30000
+dsh-polaris verify --root /path/to/project
+dsh-polaris retrieve --root /path/to/project --query solver
+dsh-polaris license --root /path/to/project
+dsh-polaris rules --root /path/to/project
 ```
-
-`--scope` 可选：
-
-| 值 | 含义 |
-|---|---|
-| `all` | 理工科 + 代码优化（默认） |
-| `science` | 仅理工科 |
-| `code` | 仅代码优化 |
-
-## 子命令
-
-### search / list
-
-实时合并 `topic:dsh-plugin` 的 stars 与 updated 两种排序，抓取候选仓库的
-`package.json`，只保留当前 `dsh.bundle.patch` 标准插件，输出评分与理由。
-
-### install
-
-- 优先调用 `dsh plugin --profile <name> add <specs...>`，由 DSH 负责 profile
-  初始化与 `dsh.profile.bundles` 对账；
-- 若 `dsh` 不在 PATH，回退为 `pnpm add` 并自行对账；
-- 对带 `prepare` 脚本的 git 依赖，预先写入 profile 的
-  `pnpm-workspace.yaml` 的 `allowBuilds`；
-- 默认安装分数 `>= 6.0` 且排名前 `--max 10` 的插件；
-- `--dry-run` 只打印安装计划，不写任何文件。
-
-### review（后期能力，已内置第一版）
-
-递归审阅本地 AI 工具的 `SKILL.md` 与 `mcp.json` / `.mcp.json`，按同一套
-极简 + 理工科/代码优化标准打分；`--write` 将命中的技能转换为
-`polaris-converted/skills/*.md`。后续可把转换产物直接注册为北极星插件的
-运行时技能内容。
 
 ## 插件结构
 
 ```
 Polaris/
-├── package.json          # dsh.bundle manifest + zero deps
-├── cordis.patch.yml      # bundle layer: mounts dsh-polaris plugin row
-├── index.js              # Cordis plugin: /polaris command + polaris skill
-├── lib/polaris.js        # discovery/scoring/install/review core
-├── bin/dsh-polaris.js    # standalone CLI
-└── skills/polaris/SKILL.md
+├── package.json              # dsh.bundle manifest + exports（每个原语一个 subpath）
+├── cordis.patch.yml          # 七个独立原子插件行
+├── index.js                  # 兼容旧入口：等价于 dsh-polaris/discovery
+├── plugins/
+│   ├── discovery.js          # /polaris-discover
+│   ├── audit.js              # /polaris-audit
+│   ├── exec.js               # /polaris-exec
+│   ├── verify.js             # /polaris-verify
+│   ├── retrieve.js           # /polaris-retrieve
+│   ├── license.js            # /polaris-license
+│   └── rules.js              # /polaris-rules
+├── lib/                      # 各原语核心实现（零依赖、有界）
+├── bin/dsh-polaris.js        # 独立 CLI
+└── skills/polaris/           # 默认规则与发现原语技能
 ```
+
+## 设计约束
+
+- **无状态**：每个原语只读输入并产生确定性输出，不维护会话状态。
+- **单一职责**：一个插件只做一件事；组合由 profile patch 层完成。
+- **可组合**：每个原语可通过 DSH Loader 行独立启停、替换、覆盖。
+- **可验证**：`polaris-verify` 以声明式 schema 执行测试与覆盖率门槛。
+- **成本有界**：每个原语都声明并强制执行文件数、文件大小、超时与输出上限。
 
 ## 安全说明
 
-安装第三方 git 包等于授权其代码在本机运行。建议先
-`/polaris install --dry-run` 审阅计划，再对可信仓库执行安装。
+安装第三方 git 包等于授权其代码在本机运行。建议先 `dsh-polaris install --dry-run` 审阅计划，再对可信仓库执行安装。
