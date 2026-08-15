@@ -3,10 +3,10 @@
  */
 
 import { runRetrieve } from '../lib/retrieve.js'
-import { registerPrimitive, tokenize } from './helper.js'
+import { registerPrimitive, textTool, tokenize } from './helper.js'
 
 export const name = 'polaris-retrieve'
-export const inject = ['commands', 'skills']
+export const inject = ['commands', 'skills', 'tools']
 
 const SKILL = `# 北极星检索原语 (polaris-retrieve)
 
@@ -25,5 +25,10 @@ export function apply(ctx) {
     hint: '--root <path> --query <symbol|keyword> [--top 40]',
     skill: SKILL,
     handler: async invocation => ({ kind: 'success', text: await runRetrieve(tokenize(invocation.rawInput)) }),
+    tool: textTool('polaris_retrieve', 'Deterministic code symbol and documentation hybrid retrieval. Use when locating a function, class, or documented concept in the workspace.', {
+      root: { type: 'string', description: 'Project root to search.' },
+      query: { type: 'string', description: 'Symbol name or keyword.' },
+      top: { type: 'number', description: 'Max results (default 40).' },
+    }, async args => ({ report: await runRetrieve(['--root', args.root ?? process.cwd(), '--query', args.query ?? '', ...(args.top !== undefined ? ['--top', String(args.top)] : [])]) })),
   })
 }

@@ -4,10 +4,10 @@
  */
 
 import { runLicense } from '../lib/license.js'
-import { registerPrimitive, tokenize } from './helper.js'
+import { registerPrimitive, textTool, tokenize } from './helper.js'
 
 export const name = 'polaris-license'
-export const inject = ['commands', 'skills']
+export const inject = ['commands', 'skills', 'tools']
 
 const SKILL = `# 北极星许可证原语 (polaris-license)
 
@@ -27,5 +27,8 @@ export function apply(ctx) {
     hint: '--root <path> [--fail-on]',
     skill: SKILL,
     handler: async invocation => ({ kind: 'success', text: await runLicense(tokenize(invocation.rawInput)) }),
+    tool: textTool('polaris_license', 'License compliance query for a project and its installed direct dependencies. Call when adding a dependency or before shipping.', {
+      root: { type: 'string', description: 'Project root to inspect.' },
+    }, async args => ({ report: await runLicense(['--root', args.root ?? process.cwd()]) })),
   })
 }

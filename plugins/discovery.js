@@ -13,10 +13,10 @@ import {
   parseOptions,
   searchBest,
 } from '../lib/polaris.js'
-import { registerPrimitive, tokenize } from './helper.js'
+import { registerPrimitive, textTool, tokenize } from './helper.js'
 
 export const name = 'polaris-discovery'
-export const inject = ['commands', 'skills']
+export const inject = ['commands', 'skills', 'tools']
 
 const SKILL = readFileSync(new URL('../skills/polaris/SKILL.md', import.meta.url), 'utf8')
 
@@ -48,5 +48,12 @@ export function apply(ctx) {
     hint: 'search [--scope all|science|code] [--top 8] | install [--profile web] [--scope code] [--max 10] [--dry-run]',
     skill: SKILL,
     handler,
+    tool: textTool('polaris_discover', 'Realtime discovery of GitHub dsh-plugin topic plugins that match the Polaris minimal + science/engineering/code-optimization criteria. Call when searching for a DSH capability to avoid reimplementing it.', {
+      scope: { type: 'string', description: 'all | science | code (default all).' },
+      top: { type: 'number', description: 'Max candidates to return (default 8).' },
+    }, async args => {
+      const ranked = await searchBest({ token: process.env.GITHUB_TOKEN, scope: args.scope ?? 'all', logger: () => {} })
+      return { report: formatRanked(ranked, { top: args.top ?? 8 }) }
+    }),
   })
 }

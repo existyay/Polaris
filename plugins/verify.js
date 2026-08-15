@@ -3,10 +3,10 @@
  */
 
 import { runVerify } from '../lib/verify.js'
-import { registerPrimitive, tokenize } from './helper.js'
+import { registerPrimitive, textTool, tokenize } from './helper.js'
 
 export const name = 'polaris-verify'
-export const inject = ['commands', 'skills']
+export const inject = ['commands', 'skills', 'tools']
 
 const SKILL = `# 北极星验证原语 (polaris-verify)
 
@@ -39,5 +39,14 @@ export function apply(ctx) {
       const result = await runVerify(tokenize(invocation.rawInput))
       return { kind: result.ok ? 'success' : 'error', text: result.text }
     },
+    tool: textTool('polaris_verify', 'Run deterministic functional tests and enforce a coverage threshold from .polaris-verify.json. Call before declaring a task done or a change verified.', {
+      root: { type: 'string', description: 'Project root to verify.' },
+      cmd: { type: 'string', description: 'Optional test command override.' },
+      coverageCmd: { type: 'string', description: 'Optional coverage command override.' },
+      threshold: { type: 'number', description: 'Coverage percentage gate (0-100).' },
+    }, async args => {
+      const result = await runVerify(['--root', args.root ?? process.cwd(), ...(args.cmd ? ['--cmd', args.cmd] : []), ...(args.coverageCmd ? ['--coverageCmd', args.coverageCmd] : []), ...(args.threshold !== undefined ? ['--threshold', String(args.threshold)] : [])])
+      return { report: result.text, ok: result.ok }
+    }),
   })
 }

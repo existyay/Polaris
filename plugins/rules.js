@@ -4,10 +4,10 @@
  */
 
 import { injectRules, runRules } from '../lib/rules.js'
-import { registerPrimitive, tokenize } from './helper.js'
+import { registerPrimitive, textTool, tokenize } from './helper.js'
 
 export const name = 'polaris-rules'
-export const inject = ['commands', 'skills']
+export const inject = ['commands', 'skills', 'tools']
 
 const SKILL = `# 北极星规则原语 (polaris-rules)
 
@@ -31,6 +31,9 @@ export function apply(ctx) {
     hint: '--root <path>',
     skill: SKILL,
     handler: async invocation => ({ kind: 'success', text: await runRules(tokenize(invocation.rawInput)) }),
+    tool: textTool('polaris_rules', 'Read and render the declarative Chinese science/engineering terminology mapping and code optimization rules for the current workspace.', {
+      root: { type: 'string', description: 'Project root containing polaris-rules.yml or .dsh/polaris-rules.yml.' },
+    }, async args => ({ report: await runRules(['--root', args.root ?? process.cwd()]) })),
   })
   const root = process.env.POLARIS_RULES_ROOT ?? process.cwd()
   injectRules(ctx, root)
