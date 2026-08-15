@@ -1,0 +1,10 @@
+# 北极星 (Polaris) bundle layer.
+# Applied after dsh-base in any profile that lists `dsh-polaris`.
+# The plugin registers:
+#   - /polaris  human command
+#   - polaris  runtime skill (model-invocable)
+# It ships zero dependencies and needs no build step, so a git install works
+# without pnpm build allowance.
+- insert:
+    - id: polaris
+      name: dsh-polaris

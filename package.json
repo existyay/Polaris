@@ -1,0 +1,38 @@
+{
+  "name": "dsh-polaris",
+  "version": "0.1.0",
+  "description": "北极星 (Polaris)：实时扫描 GitHub dsh-plugin 主题，按 deepseek-harness 极简开发范式与理工科/代码优化特化，一键安装最适配的 DSH 插件。",
+  "type": "module",
+  "main": "index.js",
+  "bin": {
+    "dsh-polaris": "bin/dsh-polaris.js"
+  },
+  "files": [
+    "index.js",
+    "lib",
+    "bin",
+    "skills/polaris/SKILL.md",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "plugin-manager",
+    "minimal",
+    "science",
+    "engineering",
+    "code-optimization",
+    "北极星"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.19"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}
