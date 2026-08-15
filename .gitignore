@@ -2,3 +2,4 @@ node_modules/
 *.tgz
 polaris-converted/
 .DS_Store
+.polaris-index/

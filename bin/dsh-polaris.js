@@ -15,10 +15,15 @@ import { runVerify } from '../lib/verify.js'
 import { runRetrieve } from '../lib/retrieve.js'
 import { runLicense } from '../lib/license.js'
 import { runRules } from '../lib/rules.js'
+import { runSniff } from '../lib/sniff.js'
+import { runArena } from '../lib/arena.js'
+import { sealFromArgs } from '../lib/seal.js'
+import { promoteFromArgs } from '../lib/registry.js'
+import { runRoute } from '../lib/scheduler.js'
 
 function helpText() {
   return [
-    '北极星 (Polaris) — atomic dsh-plugin primitives',
+    '北极星 (Polaris) — capability aggregation & evolution layer',
     '',
     'Usage:',
     '  dsh-polaris discover|search [--scope all|science|code] [--top 20] [--json]',
@@ -29,6 +34,11 @@ function helpText() {
     '  dsh-polaris retrieve    [--root <path>] --query <symbol|keyword> [--top 40]',
     '  dsh-polaris license     [--root <path>] [--fail-on]',
     '  dsh-polaris rules       [--root <path>]',
+    '  dsh-polaris sniff       [--root <path>] [--maxFiles 500]      (find-skills alias)',
+    '  dsh-polaris arena       [--root <path>]                       (dual-track gate)',
+    '  dsh-polaris seal        --name <name> [--entry <entry>] [--persist] [--keyPath <path>]',
+    '  dsh-polaris promote     --name <name> [--entry <entry>] [--indexRoot <path>] [--gitOps]',
+    '  dsh-polaris route       "<intent>" [--indexRoot <path>]       (semantic scheduler)',
   ].join('\n')
 }
 
@@ -89,6 +99,16 @@ try {
     console.log(await runLicense(rest))
   } else if (sub === 'rules') {
     console.log(await runRules(rest))
+  } else if (sub === 'sniff' || sub === 'find-skills') {
+    console.log(await runSniff(rest))
+  } else if (sub === 'arena') {
+    console.log(await runArena(rest))
+  } else if (sub === 'seal') {
+    console.log(sealFromArgs(rest))
+  } else if (sub === 'promote') {
+    console.log(promoteFromArgs(rest))
+  } else if (sub === 'route') {
+    console.log(runRoute(rest))
   } else {
     console.error(`unknown command ${JSON.stringify(sub)}`)
     console.error(helpText())
