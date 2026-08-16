@@ -1,0 +1,22 @@
+name: set-topics
+
+on:
+  push:
+    paths:
+      - .github/workflows/set-topics.yml
+  workflow_dispatch:
+
+jobs:
+  set-topics:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Replace repository topics
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method PUT /repos/${{ github.repository }}/topics \
+            -f 'names[]=dsh-plugin' \
+            -f 'names[]=deepseek-harness' \
+            -f 'names[]=dsh' \
+            -f 'names[]=polaris' \
+            -f 'names[]=atomic-plugins'
