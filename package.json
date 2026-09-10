@@ -7,6 +7,9 @@
   "bin": {
     "dsh-polaris": "bin/dsh-polaris.js"
   },
+  "scripts": {
+    "test": "node --test"
+  },
   "files": [
     "index.js",
     "plugins",
